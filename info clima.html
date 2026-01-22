@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  /* ESTÉTICA APPLE/NOTION */
+  body {
+    background-color: #191919; /* Fondo Notion Dark */
+    color: #E3E3E3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .container {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Separación entre reloj y clima */
+    padding: 10px 20px;
+    border-radius: 12px;
+    /* Si quieres un fondo sutil en la tarjeta, descomenta la siguiente línea: */
+    /* background: rgba(255, 255, 255, 0.03); */
+  }
+
+  /* RELOJ */
+  #reloj {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums; /* Evita que los números salten */
+  }
+
+  /* SEPARADOR */
+  .divider {
+    width: 1px;
+    height: 24px;
+    background-color: #444;
+  }
+
+  /* CLIMA */
+  #clima {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  #icono-clima {
+    font-size: 22px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div id="reloj">--:--</div>
+  <div class="divider"></div>
+  <div id="clima">
+    <span id="icono-clima">⏳</span>
+    <span id="temperatura">Cargando...</span>
+  </div>
+</div>
+
+<script>
+  // --- 1. CONFIGURACIÓN DEL RELOJ ---
+  function actualizarReloj() {
+    const ahora = new Date();
+    // Formato 24h limpio (HH:MM)
+    const horas = String(ahora.getHours()).padStart(2, '0');
+    const minutos = String(ahora.getMinutes()).padStart(2, '0');
+    document.getElementById('reloj').innerText = `${horas}:${minutos}`;
+  }
+  setInterval(actualizarReloj, 1000);
+  actualizarReloj(); // Ejecutar ya
+
+  // --- 2. CONFIGURACIÓN DEL CLIMA (Open-Meteo) ---
+  
+  // 📍 COORDENADAS (Por defecto: Valencia, ES)
+  // Si vives en otro lado, cambia estos dos números:
+  const lat = 39.4699; 
+  const lon = -0.3763;
+
+  async function obtenerClima() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+      const respuesta = await fetch(url);
+      const datos = await respuesta.json();
+      
+      const temp = Math.round(datos.current_weather.temperature);
+      const codigo = datos.current_weather.weathercode;
+      
+      // Mapear códigos a Emojis (WMO Codes)
+      let icono = "☀️"; // Sol por defecto
+      if (codigo >= 1 && codigo <= 3) icono = "⛅"; // Nublado
+      if (codigo >= 45 && codigo <= 48) icono = "🌫️"; // Niebla
+      if (codigo >= 51 && codigo <= 67) icono = "🌧️"; // Lluvia
+      if (codigo >= 71 && codigo <= 77) icono = "❄️"; // Nieve
+      if (codigo >= 80 && codigo <= 82) icono = "🌦️"; // Chubascos
+      if (codigo >= 95) icono = "⛈️"; // Tormenta
+
+      document.getElementById('temperatura').innerText = `${temp}°C`;
+      document.getElementById('icono-clima').innerText = icono;
+
+    } catch (error) {
+      console.error("Error clima:", error);
+    }
+  }
+  
+  obtenerClima();
+  // Actualizar clima cada 30 minutos
+  setInterval(obtenerClima, 1800000);
+
+</script>
+
+</body>
+</html>
